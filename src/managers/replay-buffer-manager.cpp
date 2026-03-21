@@ -6,7 +6,6 @@
 #include "managers/replay-buffer-manager.hpp"
 #include "managers/settings-manager.hpp"
 #include "utils/logger.hpp"
-#include "utils/video-trimmer.hpp"
 
 // OBS includes
 #include <util/platform.h>
@@ -22,7 +21,7 @@ namespace ReplayBufferPro
   //=============================================================================
 
   ReplayBufferManager::ReplayBufferManager(QObject *parent)
-      : QObject(parent), pendingSaveDuration(0)
+      : QObject(parent)
   {
   }
 
@@ -57,8 +56,8 @@ namespace ReplayBufferPro
       return false;
     }
 
-    pendingSaveDuration = duration; // Store the duration for the save completion handler
-    obs_frontend_replay_buffer_save();
+    // Call the OBS frontend API to save with duration-limiting
+    obs_frontend_replay_buffer_save_duration(duration * 1000000LL);
     return true;
   }
 
@@ -76,66 +75,4 @@ namespace ReplayBufferPro
     }
     return false;
   }
-
-  void ReplayBufferManager::setPendingSaveDuration(int duration)
-  {
-    pendingSaveDuration = duration;
-  }
-
-  int ReplayBufferManager::getPendingSaveDuration() const
-  {
-    return pendingSaveDuration;
-  }
-
-  void ReplayBufferManager::clearPendingSaveDuration()
-  {
-    pendingSaveDuration = 0;
-  }
-
-  //=============================================================================
-  // REPLAY PROCESSING
-  //=============================================================================
-
-  std::string ReplayBufferManager::getTrimmedOutputPath(const char *sourcePath)
-  {
-    std::string path(sourcePath);
-    size_t dot = path.find_last_of('.');
-    if (dot != std::string::npos)
-    {
-      path.insert(dot, "_trimmed");
-    }
-    else
-    {
-      path += "_trimmed";
-    }
-
-    return path;
-  }
-
-
-  void ReplayBufferManager::trimReplayBuffer(const char *sourcePath, int duration)
-  {
-    try
-    {
-      Logger::info("Trimming replay buffer save to %d seconds", duration);
-
-      std::string outputPath = getTrimmedOutputPath(sourcePath);
-
-      // Use libavformat instead of external FFmpeg binary
-      if (!VideoTrimmer::trimToLastSeconds(sourcePath, outputPath, duration))
-      {
-        throw std::runtime_error("Video trimming failed");
-      }
-
-      // Delete the original source file
-      os_unlink(sourcePath);
-
-      Logger::info("Successfully trimmed replay buffer to last %d seconds", duration);
-    }
-    catch (const std::exception &e)
-    {
-      Logger::error("Failed to trim replay: %s", e.what());
-    }
-  }
-
-} // namespace ReplayBufferPro
+}

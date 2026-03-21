@@ -4,8 +4,7 @@
  *
  * Provides enhanced replay buffer controls for OBS Studio including:
  * - Configurable buffer length adjustment
- * - Segment-based replay saving
- * - Automatic replay trimming
+ * - Segment-based replay saving with duration limiting
  */
 
 // OBS includes
@@ -25,7 +24,6 @@
 #include <QPushButton>
 
 // STL includes
-#include <thread>
 #include <string>
 #include <vector>
 
@@ -152,9 +150,6 @@ namespace ReplayBufferPro
 			QMetaObject::invokeMethod(plugin, "updateBufferLengthUIState", Qt::QueuedConnection);
 			QMetaObject::invokeMethod(plugin, "loadBufferLength", Qt::QueuedConnection);
 			break;
-		case OBS_FRONTEND_EVENT_REPLAY_BUFFER_SAVED:
-			plugin->handleReplayBufferSaved();
-			break;
 		default:
 			break;
 		}
@@ -212,30 +207,6 @@ namespace ReplayBufferPro
 	void Plugin::handleSaveSegment(int duration)
 	{
 		replayManager->saveSegment(duration, this);
-	}
-
-	void Plugin::handleReplayBufferSaved() 
-	{
-		// Consume the pending duration immediately (before spawning the thread) so that a
-		// rapid second save event sees 0 and does not attempt to double-trim.
-		int duration = replayManager->getPendingSaveDuration();
-		if (duration > 0) {
-			replayManager->clearPendingSaveDuration();
-
-			const char* savedPath = obs_frontend_get_last_replay();
-			if (savedPath) {
-				std::string pathCopy(savedPath);
-				bfree((void*)savedPath);
-
-				// Offload trimming to background thread to avoid blocking OBS event thread.
-				// duration is captured by value; clearPendingSaveDuration has already been
-				// called above so the next save event can proceed independently.
-				auto *manager = replayManager;
-				std::thread([manager, path = std::move(pathCopy), duration]() {
-					manager->trimReplayBuffer(path.c_str(), duration);
-				}).detach();
-			}
-		}
 	}
 
 	void Plugin::handleCustomizeSaveButtons()

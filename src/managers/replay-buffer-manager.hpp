@@ -20,13 +20,10 @@
 #include <QObject>
 #include <QMessageBox>
 
-// Local includes
-#include "utils/video-trimmer.hpp"
-
 namespace ReplayBufferPro
 {
   /**
-   * @brief Manages replay buffer operations including saving and trimming
+   * @brief Manages replay buffer operations including saving
    */
   class ReplayBufferManager : public QObject
   {
@@ -51,7 +48,7 @@ namespace ReplayBufferPro
     // REPLAY BUFFER OPERATIONS
     //=========================================================================
     /**
-     * @brief Saves the replay buffer and set the duration for the pending trimming operation after save completes
+     * @brief Saves a segment of the replay buffer with specified duration
      * @param duration Seconds to save
      * @param parent Parent widget for error messages
      * @return Success status
@@ -64,46 +61,6 @@ namespace ReplayBufferPro
      * @return Success status
      */
     bool saveFullBuffer(QWidget *parent = nullptr);
-
-    /**
-     * @brief Sets the pending save duration
-     * @param duration Duration in seconds
-     */
-    void setPendingSaveDuration(int duration);
-
-    /**
-     * @brief Gets the pending save duration
-     * @return Duration in seconds
-     */
-    int getPendingSaveDuration() const;
-
-    /**
-     * @brief Clears the pending save duration
-     */
-    void clearPendingSaveDuration();
-
-    /**
-     * @brief Trims a replay buffer file, called after save completes
-     * @param sourcePath Source file path
-     * @param duration Duration in seconds
-     */
-    void trimReplayBuffer(const char *sourcePath, int duration);
-
-  private:
-    //=========================================================================
-    // MEMBER VARIABLES
-    //=========================================================================
-    std::atomic<int> pendingSaveDuration; ///< Duration to save when buffer save completes (atomic for thread safety)
-
-    //=========================================================================
-    // HELPER METHODS
-    //=========================================================================
-    /**
-     * @brief Gets output path for trimmed file
-     * @param sourcePath Original file path
-     * @return Trimmed file path
-     */
-    std::string getTrimmedOutputPath(const char *sourcePath);
   };
 
 } // namespace ReplayBufferPro

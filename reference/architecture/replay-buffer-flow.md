@@ -1,50 +1,34 @@
-# Replay Buffer Flow (Save + Trim)
+# Replay Buffer Flow (Save with Duration Limiting)
 
-This document explains how the plugin saves replay buffer content and trims it to a selected duration.
+This document explains how the plugin saves replay buffer content with optional duration limiting.
 
 ## Responsibilities
 - Trigger replay buffer saves through OBS frontend APIs.
-- Track the requested duration for the saved file.
-- Trim the saved file to the last N seconds using FFmpeg (libavformat).
 
 ## Save segment flow
 1. User clicks a duration button or hotkey.
 2. `ReplayBufferManager::saveSegment(duration, parent)` validates:
    - Replay buffer is active.
    - `duration <= currentBufferLength` from `SettingsManager`.
-3. If valid, `pendingSaveDuration` is set and `obs_frontend_replay_buffer_save()` is called.
-4. OBS emits `OBS_FRONTEND_EVENT_REPLAY_BUFFER_SAVED`.
-5. The dock calls `handleReplayBufferSaved()`:
-   - Retrieves the saved path via `obs_frontend_get_last_replay()`.
-   - Copies the path, frees the OBS-allocated buffer, and trims in a background thread.
-   - Clears `pendingSaveDuration`.
+3. If valid, the method calls `obs_frontend_replay_buffer_save_duration(duration)` — a new OBS frontend API.
+4. The replay buffer segment is saved, with packets past the replay duration filtered out.
 
 ## Save full buffer flow
 1. User clicks “Save Replay Buffer”.
 2. `ReplayBufferManager::saveFullBuffer(...)` checks buffer activity.
-3. If active, it calls `obs_frontend_replay_buffer_save()` and does not set a pending duration.
-4. When OBS signals a saved replay, no trim is performed because the pending duration is 0.
+3. If active, it calls `obs_frontend_replay_buffer_save()` (standard OBS API, no duration limiting).
+4. The entire current replay buffer is saved without filtering.
 
 ## Trimming details
-- `ReplayBufferManager::trimReplayBuffer(...)`:
-  - Builds output path by inserting `_trimmed` before the extension.
-  - Calls `VideoTrimmer::trimToLastSeconds(...)`.
-  - Deletes the original file with `os_unlink(...)` on success.
+- Packets past the replay durations are filtered during muxing by OBS ffmpeg plugin.
 
 ## Error handling
-- UI warnings show when the replay buffer is inactive or the requested duration is too long.
-- Trimming errors are logged via `Logger::error(...)` but do not raise UI alerts.
-- If no saved replay path is returned, trimming is skipped.
+- UI warnings show when the replay buffer is inactive or the requested duration exceeds buffer length.
 
 ## Key classes and functions
-- `ReplayBufferManager::saveSegment(...)`
-- `ReplayBufferManager::saveFullBuffer(...)`
-- `ReplayBufferManager::getPendingSaveDuration()`
-- `ReplayBufferManager::trimReplayBuffer(...)`
-- `VideoTrimmer::trimToLastSeconds(...)`
+- `ReplayBufferManager::saveSegment(...)` — calls `obs_frontend_replay_buffer_save_duration()` API
+- `ReplayBufferManager::saveFullBuffer(...)` — calls `obs_frontend_replay_buffer_save()` API
 
 ## Related code
 - `src/managers/replay-buffer-manager.hpp`
 - `src/managers/replay-buffer-manager.cpp`
-- `src/utils/video-trimmer.hpp`
-- `src/utils/video-trimmer.cpp`

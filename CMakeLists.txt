@@ -5,56 +5,41 @@ project(replay-buffer-pro VERSION 1.4.0)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 
+set(OBS_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../obs-studio" CACHE PATH "OBS Studio source code directory")
+set(OBS_INSTALL_DIR "" CACHE PATH "OBS Studio install directory")
+
 # Find OBS
 if(WIN32)
-  get_filename_component(OBS_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../obs-studio" ABSOLUTE)
+  get_filename_component("${OBS_ROOT_DIR}" ABSOLUTE)
 
   if(NOT EXISTS "${OBS_ROOT_DIR}")
-    message(FATAL_ERROR "OBS Studio source not found at ${OBS_ROOT_DIR}. Please clone obs-studio repository at the same level as this plugin.")
+    message(FATAL_ERROR "OBS Studio source not found at ${OBS_ROOT_DIR}. Please clone obs-studio repository and specify -DOBS_ROOT_DIR=<obs-studio-path>")
   endif()
 
-  # Find OBS deps directory that contains FFmpeg libraries
-  file(GLOB OBS_DEPS_DIRS "${OBS_ROOT_DIR}/.deps/obs-deps-*")
-  set(OBS_DEPS_DIR "")
-  
-  # Look for a deps directory that has FFmpeg libraries
-  foreach(DEPS_DIR ${OBS_DEPS_DIRS})
-    if(EXISTS "${DEPS_DIR}/lib/avformat.lib")
-      set(OBS_DEPS_DIR "${DEPS_DIR}")
-      break()
-    endif()
-  endforeach()
-  
-  if(NOT OBS_DEPS_DIR)
-    message(FATAL_ERROR "OBS deps with FFmpeg libraries not found. Expected directory like ${OBS_ROOT_DIR}/.deps/obs-deps-* with avformat.lib")
-  endif()
-  
-  message(STATUS "Using OBS deps with FFmpeg: ${OBS_DEPS_DIR}")
-
-  set(obs_INCLUDE_DIRS
+  set(OBS_INCLUDE_DIRS
     "${OBS_ROOT_DIR}/libobs"
     "${OBS_ROOT_DIR}/frontend/api"
     "${OBS_ROOT_DIR}/build/config"
-    "${OBS_DEPS_DIR}/include"  # FFmpeg headers from OBS deps
   )
 
   set(OBS_LIBRARIES
     "${OBS_ROOT_DIR}/build/libobs/$<CONFIG>/obs.lib"
     "${OBS_ROOT_DIR}/build/frontend/api/$<CONFIG>/obs-frontend-api.lib"
   )
-
-  # FFmpeg libraries from OBS dependencies
-  set(FFMPEG_LIBRARIES
-    "${OBS_DEPS_DIR}/lib/avformat.lib"
-    "${OBS_DEPS_DIR}/lib/avcodec.lib"
-    "${OBS_DEPS_DIR}/lib/avutil.lib"
-  )
 else()
-  find_package(LibObs REQUIRED)
-  # For Linux/Mac, use system FFmpeg or find FFmpeg from OBS installation
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(LIBAV REQUIRED libavformat libavcodec libavutil)
-  set(FFMPEG_LIBRARIES ${LIBAV_LIBRARIES})
+  # For Linux/Mac use automatic discovery from installed OBS package
+  # Install your obs-studio build output using:
+  #   cmake --install <obs-build-dir> --prefix <obs-install-dir>
+  # Then configure replay-buffer-pro with:
+  #   cmake -S . -B build -DOBS_INSTALL_DIR=<obs-install-dir>
+
+  if(OBS_INSTALL_DIR)
+    list(APPEND CMAKE_PREFIX_PATH "${OBS_INSTALL_DIR}")
+  endif()
+
+  find_package(libobs REQUIRED)
+
+  set(OBS_LIBRARIES "OBS::libobs")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -66,7 +51,6 @@ set(SOURCES
   src/plugin/plugin.cpp
   src/utils/obs-utils.cpp
   src/utils/duration-format.cpp
-  src/utils/video-trimmer.cpp
   src/ui/ui-components.cpp
   src/managers/settings-manager.cpp
   src/managers/save-button-settings.cpp
@@ -77,38 +61,36 @@ set(SOURCES
 add_library(${PROJECT_NAME} MODULE ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-  ${obs_INCLUDE_DIRS}
+  ${OBS_INCLUDE_DIRS}
   ${Qt6Widgets_INCLUDE_DIRS}
   src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   ${OBS_LIBRARIES}
-  ${FFMPEG_LIBRARIES}
   Qt6::Widgets
   Qt6::Core
 )
 
-# Regular installation (for development)
+# Set plugin files install paths
 if(WIN32)
-  set(PLUGIN_DEST "C:/Program Files/obs-studio/obs-plugins/64bit")
-  set(DATA_DEST "C:/Program Files/obs-studio/data/obs-plugins/${PROJECT_NAME}")
-
-  # Install plugin binary
-  install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${PLUGIN_DEST}
-    RUNTIME DESTINATION ${PLUGIN_DEST}
-  )
-
-  # Install data files
-  install(DIRECTORY data/
-    DESTINATION ${DATA_DEST}
-  )
+  # Install with cmake --install build --prefix "C:/Program Files/obs-studio/obs-plugins/64bit"
+  set(PLUGIN_DEST "obs-plugins/64bit")
+  set(DATA_DEST "data/obs-plugins/${PROJECT_NAME}")
 else()
   # Linux/Mac paths
-  set(PLUGIN_DEST "${CMAKE_INSTALL_PREFIX}/lib/obs-plugins")
-  set(DATA_DEST "${CMAKE_INSTALL_PREFIX}/share/obs/obs-plugins/${PROJECT_NAME}")
+  set(PLUGIN_DEST "lib/obs-plugins")
+  set(DATA_DEST "share/obs/obs-plugins/${PROJECT_NAME}")
 endif()
+
+# Install plugin binaries
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION "${PLUGIN_DEST}"
+  RUNTIME DESTINATION "${PLUGIN_DEST}"
+)
+
+# Install data files
+install(DIRECTORY data/ DESTINATION "${DATA_DEST}")
 
 # Release package configuration
 set(RELEASE_DIR "${CMAKE_BINARY_DIR}/obs-studio")
@@ -126,7 +108,7 @@ add_custom_target(prepare_release
     COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_ZIP_DIR}"
 
     # Copy plugin DLL
-    COMMAND ${CMAKE_COMMAND} -E copy 
+    COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:${PROJECT_NAME}>"
         "${RELEASE_PLUGIN_DIR}/"
 

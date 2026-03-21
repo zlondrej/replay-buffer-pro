@@ -126,14 +126,6 @@ namespace ReplayBufferPro
     void loadBufferLength();
 
     /**
-     * @brief Handles replay buffer saved event
-     * 
-     * Handles the event when a replay buffer is saved.
-     * Invokes the trim operation and clears the pending save duration, if needed.
-     */
-     void handleReplayBufferSaved();
-
-    /**
      * @brief Opens dialog to customize save button durations
      */
     void handleCustomizeSaveButtons();
