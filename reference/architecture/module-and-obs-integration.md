@@ -34,7 +34,6 @@ When the dock widget is constructed:
 - `OBS_FRONTEND_EVENT_EXIT`: stop settings timer and save hotkeys.
 - `OBS_FRONTEND_EVENT_REPLAY_BUFFER_STARTING`: stop settings timer and disable buffer length controls.
 - `OBS_FRONTEND_EVENT_REPLAY_BUFFER_STOPPED`: re-enable controls and reload settings.
-- `OBS_FRONTEND_EVENT_REPLAY_BUFFER_SAVED`: initiate trimming for segment saves.
 
 ## OBS frontend integration
 The module itself does not register OBS sources or outputs. Instead it relies on frontend APIs:

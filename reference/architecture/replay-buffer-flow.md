@@ -19,8 +19,9 @@ This document explains how the plugin saves replay buffer content with optional 
 3. If active, it calls `obs_frontend_replay_buffer_save()` (standard OBS API, no duration limiting).
 4. The entire current replay buffer is saved without filtering.
 
-## Trimming details
-- Packets past the replay durations are filtered during muxing by OBS ffmpeg plugin.
+## Duration handling details
+- The plugin requests duration-limited saves through `obs_frontend_replay_buffer_save_duration(...)`.
+- OBS handles packet filtering internally when writing the saved replay segment.
 
 ## Error handling
 - UI warnings show when the replay buffer is inactive or the requested duration exceeds buffer length.

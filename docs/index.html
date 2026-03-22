@@ -37,7 +37,7 @@
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://joshuapotter.github.io/replay-buffer-pro/">
-    
+
     <!-- LLM-optimized content -->
     <link rel="alternate" type="text/plain" href="llms.txt" title="LLM-optimized documentation">
 
@@ -108,7 +108,7 @@
             "name": "How is Replay Buffer Pro different from OBS's default Replay Buffer?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The default saves a single fixed duration clip. Replay Buffer Pro lets you save multiple customizable lengths on demand with buttons/hotkeys, and trims automatically."
+              "text": "The default saves a single fixed duration clip. Replay Buffer Pro lets you save multiple customizable lengths on demand with buttons/hotkeys."
             }
           },
           {
@@ -116,7 +116,7 @@
             "name": "Why would I use Replay Buffer Pro?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Replay Buffer Pro is ideal for effortlessly capturing and saving recent moments from your streams or recordings in various lengths. Unlike traditional methods that require manual clipping, this plugin mimics the 'Save Recent Gameplay' feature found on Xbox and Playstation, ensuring seamless and automatic trim functionality. It's the perfect tool for crafting clips ready for platforms like TikTok, YouTube Shorts, and Instagram Reels."
+              "text": "Replay Buffer Pro is ideal for effortlessly capturing and saving recent moments from your streams or recordings in various lengths. Unlike traditional methods that require manual clipping, this plugin mimics the 'Save Recent Gameplay' feature found on Xbox and Playstation. It's the perfect tool for crafting clips ready for platforms like TikTok, YouTube Shorts, and Instagram Reels."
             }
           },
           {
@@ -124,7 +124,7 @@
             "name": "Does Replay Buffer Pro re-encode video?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. Trimming uses FFmpeg with -c copy for fast, lossless output."
+              "text": "No. Segment saves are handled directly by OBS replay buffer APIs."
             }
           },
           {
@@ -248,7 +248,7 @@
               <div class="plugin-body">
                 <div class="plugin-section">
                   <h3 class="plugin-section-title">Replay Buffer Settings</h3>
-                  
+
                   <div class="slider-container">
                     <label class="slider-label">
                       <span>Maximum Replay Buffer Length</span>
@@ -258,13 +258,13 @@
                       </span>
                     </label>
                     <div class="slider-wrapper">
-                      <input 
-                        type="range" 
-                        class="buffer-slider" 
+                      <input
+                        type="range"
+                        class="buffer-slider"
                         id="buffer-slider"
-                        min="1" 
-                        max="21600" 
-                        value="7200" 
+                        min="1"
+                        max="21600"
+                        value="7200"
                         step="1"
                       />
                       <div class="slider-track-fill" id="slider-fill"></div>
@@ -373,7 +373,7 @@
       <section class="section alt" id="features">
         <div class="container">
           <h2>What is Replay Buffer Pro?</h2>
-          <p><strong>Replay Buffer Pro is a plugin for OBS Studio</strong> that expands upon the built-in Replay Buffer. When you press a button or hotkey for a custom save button, the plugin saves the current buffer and instantly trims it down to the desired length, without re-encoding.</p>
+          <p><strong>Replay Buffer Pro is a plugin for OBS Studio</strong> that expands upon the built-in Replay Buffer. When you press a button or hotkey for a custom save button, the plugin saves the requested duration directly through OBS replay buffer APIs.</p>
           <h3>Key Features</h3>
           <div class="features-grid">
             <article class="feature">
@@ -475,7 +475,7 @@
               <a id="download-secondary" class="btn btn-primary" href="https://github.com/JoshuaPotter/replay-buffer-pro/releases/latest/download/replay-buffer-pro-windows-x64.zip">Download for Windows (x64)</a>
             </div>
           </div>
-          
+
           <div class="requirements-box">
             <div class="requirements-header">
               <svg class="requirements-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -587,7 +587,7 @@
       <section class="section alt" id="usage-tips">
         <div class="container">
           <h2>Getting Started</h2>
-          
+
           <div class="usage-section">
             <h3 class="steps-title">Usage Guide</h3>
             <div class="steps-container">
@@ -673,21 +673,21 @@
           </div>
         </div>
       </section>
-      
+
       <section class="section" id="faq">
         <div class="container">
           <h2>FAQ</h2>
           <details>
             <summary>How is this different from OBS's default Replay Buffer?</summary>
-            <p>The default saves a single fixed duration clip. Replay Buffer Pro lets you save multiple customizable lengths on demand with buttons/hotkeys, and trims automatically.</p>
+            <p>The default saves a single fixed duration clip. Replay Buffer Pro lets you save multiple customizable lengths on demand with buttons/hotkeys.</p>
           </details>
           <details>
             <summary>Why would I use this?</summary>
-            <p>Replay Buffer Pro is ideal for effortlessly capturing and saving recent moments from your streams or recordings in various lengths. Unlike traditional methods that require manual clipping, this plugin mimics the "Save Recent Gameplay" feature found on Xbox and Playstation, ensuring seamless and automatic trim functionality. It's the perfect tool for crafting clips ready for platforms like TikTok, YouTube Shorts, and Instagram Reels.</p>
+            <p>Replay Buffer Pro is ideal for effortlessly capturing and saving recent moments from your streams or recordings in various lengths. Unlike traditional methods that require manual clipping, this plugin mimics the "Save Recent Gameplay" feature found on Xbox and Playstation. It's the perfect tool for crafting clips ready for platforms like TikTok, YouTube Shorts, and Instagram Reels.</p>
           </details>
           <details>
             <summary>Does it re-encode video?</summary>
-            <p>No. Trimming uses FFmpeg with <code>-c copy</code> for fast, lossless output.</p>
+            <p>No. Segment saves are handled directly by OBS replay buffer APIs.</p>
           </details>
           <details>
             <summary>Why are some save buttons disabled?</summary>
@@ -724,7 +724,7 @@
                 <p>Ensure <code>replay-buffer-pro.dll</code> is in <code>obs-studio/obs-plugins/64bit/</code>. Restart OBS Studio after placing the file.</p>
               </div>
             </div>
-            
+
             <div class="troubleshoot-item">
               <div class="troubleshoot-marker">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -733,11 +733,11 @@
                 </svg>
               </div>
               <div class="troubleshoot-content">
-                <strong>Trimming Fails</strong>
+                <strong>Segment Save Fails</strong>
                 <p>Check disk space and write permissions in the output directory.</p>
               </div>
             </div>
-            
+
             <div class="troubleshoot-item">
               <div class="troubleshoot-marker">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -750,7 +750,7 @@
                 <p>Review the OBS Studio log file for plugin load messages and errors. Look for "Replay Buffer Pro" entries to diagnose issues.</p>
               </div>
             </div>
-            
+
             <div class="troubleshoot-item">
               <div class="troubleshoot-marker">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -779,7 +779,7 @@
             <p class="footer-license">
             Replay Buffer Pro is an independent project and is not affiliated with, endorsed, or sponsored by OBS Studio or its developers. All product names, trademarks, and registered trademarks are property of their respective owners.</p>
           </div>
-          
+
           <!-- Navigation Links -->
           <div class="footer-section">
             <h4 class="footer-section-title">Navigation</h4>
@@ -791,7 +791,7 @@
               <li><a href="#" class="scroll-to-top">↑ Scroll to Top</a></li>
             </ul>
           </div>
-          
+
           <!-- Resources -->
           <div class="footer-section">
             <h4 class="footer-section-title">Resources</h4>

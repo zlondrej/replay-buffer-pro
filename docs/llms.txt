@@ -1,6 +1,6 @@
 # Replay Buffer Pro
 
-> OBS Studio plugin for saving replay buffer clips at multiple customizable durations without re-encoding
+> OBS Studio plugin for saving replay buffer clips at multiple customizable durations
 
 ## Overview
 
@@ -14,7 +14,7 @@ Replay Buffer Pro is a free, open-source plugin for OBS Studio that expands upon
 - **Platform**: Windows 10/11 (64-bit only)
 - **Requirements**: OBS Studio 30.0.0+
 - **Programming Language**: C++ with Qt6
-- **Video Processing**: libavformat with stream copy (no re-encoding)
+- **Replay Saving**: OBS frontend replay buffer APIs
 - **License**: GPL v2 or later (Open Source)
 - **Repository**: https://github.com/JoshuaPotter/replay-buffer-pro
 - **Documentation**: https://joshuapotter.github.io/replay-buffer-pro/
@@ -22,11 +22,11 @@ Replay Buffer Pro is a free, open-source plugin for OBS Studio that expands upon
 ## Key Features
 
 1. **Custom Save Buttons**: Save any custom clip length instantly with fully customizable save buttons
-2. **No Re-encoding**: Uses libavformat with stream copy for fast, lossless output
+2. **Native OBS Integration**: Uses OBS frontend replay buffer APIs for segment saves
 3. **Hotkey Support**: Assign hotkeys for each save button in OBS settings
 4. **Adjustable Buffer Length**: Set replay buffer from 1 second to 6 hours via slider
 5. **Dockable UI**: Minimal, clean interface that docks in OBS Studio
-6. **Automatic Trimming**: Saves full buffer then trims to desired length automatically
+6. **Direct Segment Saving**: Requests selected durations directly from OBS replay buffer APIs
 
 ## Use Cases
 
@@ -77,10 +77,10 @@ Replay Buffer Pro is a free, open-source plugin for OBS Studio that expands upon
 ## FAQ
 
 **Q: How is this different from OBS's default Replay Buffer?**
-A: The default saves a single fixed duration clip. Replay Buffer Pro lets you save multiple customizable lengths on demand with buttons/hotkeys, and trims automatically.
+A: The default saves a single fixed duration clip. Replay Buffer Pro lets you save multiple customizable lengths on demand with buttons/hotkeys.
 
 **Q: Does it re-encode video?**
-A: No. Trimming uses FFmpeg with `-c copy` for fast, lossless output.
+A: No. Segment saves are handled directly by OBS replay buffer APIs.
 
 **Q: Why are some save buttons disabled?**
 A: Your configured buffer length is shorter than that clip length. Increase the buffer length or choose a shorter clip.
@@ -101,7 +101,7 @@ A: Currently Windows 10/11 (64-bit) only. macOS and Linux support is planned for
 - Restart OBS Studio after placing the file
 - Check OBS logs for "Replay Buffer Pro" entries
 
-**Trimming Fails**
+**Segment Save Fails**
 - Confirm locale files exist at `obs-studio/data/obs-plugins/replay-buffer-pro/locale/`
 - Check disk space availability
 - Verify write permissions in output directory
@@ -114,10 +114,8 @@ A: Currently Windows 10/11 (64-bit) only. macOS and Linux support is planned for
 
 ### Requirements
 - Visual Studio 2022+ with C++ Desktop Development
-- Qt6 (MSVC 2022 64-bit)
 - CMake 3.16+
 - OBS Studio 30.0.0+ source code
-- FFmpeg executable
 
 ### Build Steps
 ```bash
@@ -141,7 +139,7 @@ cmake --install . --config RelWithDebInfo
 
 ## Third-Party Software
 
-This plugin uses OBS Studio's built-in FFmpeg libraries (libavformat) for video trimming functionality. FFmpeg is licensed under the LGPL v2.1+ license.
+This plugin links against OBS Studio libraries and Qt6.
 
 ## Disclaimer
 

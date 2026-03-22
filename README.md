@@ -26,9 +26,7 @@ The project website is currently hosted via GitHub Pages.
    ![Customize UI](./customize_ui.png)
 
 4. The plugin will:
-   - Save the full replay buffer
-   - Automatically trim to the selected duration (Without re-encoding)
-   - Replace the original file with the trimmed version
+   - Save the selected duration directly using OBS replay buffer APIs
 
 ### Buffer Length
 - Quickly adjust built-in replay buffer length (1s to 6h) without digging through the settings
@@ -56,7 +54,7 @@ obs-studio/
                 └── en-US.ini
 ```
 
-### From Source 
+### From Source
 
 See below for instructions to build from source.
 
@@ -74,15 +72,14 @@ Note: Close OBS before installing or copying the DLL. You may need administrator
 
 - OBS Studio 30.0.0+ (64-bit)
 - Windows 10/11 64-bit (Linux and MacOS are not supported at this time, PRs welcome!)
-- Qt6 (64-bit)
 - Visual Studio 2022+ with C++
 - CMake 3.16+
 
 ### 1. Prerequisites
 
 1. Install Visual Studio 2022+ with "Desktop development with C++"
-2. Install Qt6 (MSVC 2022 64-bit) from https://www.qt.io/download-qt-installer
-3. Install CMake 3.16+ from https://cmake.org/download/
+2. Install CMake 3.16+ from https://cmake.org/download/
+3. [Optional] Download
 
 ### 2. Build OBS Studio
 
@@ -94,12 +91,16 @@ cd obs-studio
 # Prepare build directory
 mkdir -p build && cd build
 
-# Configure with Visual Studio 2022 and Windows dependencies (obs-deps)
-# Download obs-deps for Windows separately and set its path via -DDepsPath  (otherwise, omit this parameter)
-cmake -G "Visual Studio 17 2022" -A x64 -DDepsPath="C:/Dev/obs-deps-2022" ..
+# Configure with Visual Studio 2022
+# On Windows OBS will download remaining dependencies automatically
+cmake -G "Visual Studio 17 2022" -A x64 ..
 
 # Build OBS (RelWithDebInfo to match plugin build)
 cmake --build . --config RelWithDebInfo
+
+# [Optional] Install into custom directory
+# (or system-wide if you don't specify --prefix; requires elevated shell)
+cmake --install . --config RelWithDebInfo --prefix <install-path>
 ```
 
 ### 3. Build Plugin
@@ -109,16 +110,20 @@ git clone https://github.com/joshuapotter/replay-buffer-pro.git
 cd replay-buffer-pro
 mkdir -p build && cd build
 
-# Replace path with your local Qt 6 msvc2022_64
-cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.8.2/msvc2022_64" ..
+# Configure with matching compiler and architecture
+# Dependencies used in OBS build will be reused automatically
+cmake -G "Visual Studio 17 2022" -A x64 ..
 
 # Build the plugin (RelWithDebInfo to match OBS)
 cmake --build . --config RelWithDebInfo
 
-# Install (run an elevated shell and ensure OBS is closed)
-cmake --install . --config RelWithDebInfo
+# Install into custom directory (same used for OBS install)
+cmake --install . --config RelWithDebInfo --prefix <obs-install-path>
 ```
-**Note:** Replace the Qt path with your installation. Ensure the `obs-studio` repository is located as a sibling of this plugin (same parent directory). You may need to run the install command elevated (Run as administrator) to install to Program Files.
+
+**Note:** Ensure the `obs-studio` repository is located as a sibling of this plugin (same parent directory),
+or override it during configuration with `-DOBS_ROOT_DIR=<path-to-obs-studio>`.
+You may need to run the install command elevated (Run as administrator) to install to Program Files.
 
 ### 4. Release Plugin
 Iterate the version in `CMakeLists.txt`, then run:
@@ -133,13 +138,13 @@ cmake --build . --config RelWithDebInfo --target prepare_release
 obs-studio/              # OBS Studio source code (from step 2)
 replay-buffer-pro/
 ├── CMakeLists.txt       # Build configuration
-├── data/               
+├── data/
 │   └── locale/          # Translations
 ├── src/                 # Source files
 │   ├── managers/        # Core functionality managers
 │   ├── plugin/          # Main plugin implementation
 │   ├── ui/              # User interface components
-│   └── utils/           # Utility classes (including video-trimmer)
+│   └── utils/           # Utility classes
 ├── docs/                # Project website source
 ├── reference/           # Developer documentation
 └── README.md
@@ -149,18 +154,17 @@ replay-buffer-pro/
 
 - Verify plugin DLL location
 - Check OBS logs for errors
-- For trimming issues:
+- For clip save issues:
   - Check disk space
   - Check write permissions in output directory
 - When building from source
-  - Ensure Qt6 and OBS paths are correct in CMake
-  - If building OBS on Windows, ensure `-DDepsPath` points to your obs-deps directory
+  - Ensure correct location and setup of OBS build
   - Run install command in a terminal with admin privileges
 
 ## Third-Party Software
 
-This plugin uses OBS Studio's built-in FFmpeg libraries (libavformat) for video trimming functionality. FFmpeg is licensed under the LGPL v2.1+ license.
+This plugin links against OBS Studio libraries and Qt6.
 
 ## License
 
-GPL v2 or later. See LICENSE file for details. 
+GPL v2 or later. See LICENSE file for details.

@@ -5,7 +5,7 @@ This file is a concise handoff for agents working in the Replay Buffer Pro OBS p
 ## Project summary
 - Adds a dockable OBS UI for replay buffer controls.
 - Lets users adjust replay buffer length and save clips of customizable durations.
-- Trims saved replays to the last N seconds using FFmpeg libavformat (no re-encode).
+- Saves selected clip durations directly through OBS frontend replay buffer APIs.
 
 ## Architecture map (start here)
 - Module entry + OBS integration: `src/main.cpp`
@@ -15,7 +15,7 @@ This file is a concise handoff for agents working in the Replay Buffer Pro OBS p
 - Settings manager: `src/managers/settings-manager.hpp`, `src/managers/settings-manager.cpp`
 - Save button settings: `src/managers/save-button-settings.hpp`, `src/managers/save-button-settings.cpp`
 - Hotkey manager: `src/managers/hotkey-manager.hpp`, `src/managers/hotkey-manager.cpp`
-- Utilities: `src/utils/obs-utils.*`, `src/utils/logger.hpp`, `src/utils/video-trimmer.*`
+- Utilities: `src/utils/obs-utils.*`, `src/utils/logger.hpp`, `src/utils/duration-format.*`
 - Config constants: `src/config/config.hpp`
 - Localization: `data/locale/en-US.ini`
 - Build system: `CMakeLists.txt`
@@ -30,21 +30,20 @@ This file is a concise handoff for agents working in the Replay Buffer Pro OBS p
 ### Save segment
 1. User clicks a duration button or hotkey.
 2. `ReplayBufferManager::saveSegment(...)` validates buffer active and duration <= current length.
-3. `obs_frontend_replay_buffer_save()` is called and `pendingSaveDuration` is set.
-4. On `OBS_FRONTEND_EVENT_REPLAY_BUFFER_SAVED`, the saved path is trimmed in a background thread.
+3. `obs_frontend_replay_buffer_save_duration(...)` is called with the requested duration.
+4. OBS saves only the requested duration segment.
 
 ### Save full buffer
 1. User clicks “Save Replay Buffer”.
-2. `ReplayBufferManager::saveFullBuffer(...)` saves without setting `pendingSaveDuration`.
-3. Saved event occurs, but no trimming is performed.
+2. `ReplayBufferManager::saveFullBuffer(...)` calls `obs_frontend_replay_buffer_save()`.
+3. OBS saves the full replay buffer.
 
 ## Key components and ownership
 - `ReplayBufferPro::Plugin` (dock) owns UI, managers, timers, and OBS event wiring.
 - `UIComponents` builds the UI and manages enabled/disabled state.
-- `ReplayBufferManager` handles save requests and trimming.
+- `ReplayBufferManager` handles save requests.
 - `SettingsManager` reads/writes OBS profile config and updates output settings.
 - `HotkeyManager` registers per-duration hotkeys and persists bindings.
-- `VideoTrimmer` trims using libavformat stream copy.
 
 ## Configuration and persistence
 - Buffer length config key: `RecRBTime`.
@@ -53,7 +52,7 @@ This file is a concise handoff for agents working in the Replay Buffer Pro OBS p
 - Custom save button durations are stored in `save_button_settings.json` under the module config path.
 
 ## Build and localization
-- Built via CMake; links OBS, Qt6, and FFmpeg libs.
+- Built via CMake; links OBS and Qt6.
 - Locale strings in `data/locale/en-US.ini` accessed with `obs_module_text(...)`.
 
 ## Not present
