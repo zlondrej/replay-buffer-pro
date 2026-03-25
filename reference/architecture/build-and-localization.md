@@ -10,12 +10,12 @@ This document describes how the plugin is built, packaged, and localized.
 
 ### Windows build
 - Assumes an OBS Studio checkout adjacent to this repo (`../obs-studio`).
-- Locates FFmpeg libraries from OBS deps (`.deps/obs-deps-*`).
-- Links against `obs.lib`, `obs-frontend-api.lib`, `avformat.lib`, `avcodec.lib`, `avutil.lib`.
+- Reuses `CMAKE_PREFIX_PATH` from the OBS build cache when available.
+- Links against `obs.lib` and `obs-frontend-api.lib`.
 
 ### Non-Windows build
-- Uses `find_package(LibObs REQUIRED)`.
-- Uses `pkg_check_modules` for libavformat/libavcodec/libavutil.
+- Uses `find_package(libobs REQUIRED)`.
+- Can use `OBS_INSTALL_DIR` to help discovery of installed OBS packages.
 
 ## Install and packaging
 - Installs plugin binary into OBS plugin directory and data files into OBS data path.
